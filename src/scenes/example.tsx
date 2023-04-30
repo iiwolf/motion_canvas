@@ -17,12 +17,11 @@ import { Logger } from '@motion-canvas/core';
 //   // )
 // }
 
-const startingHexSize: number = 200;
-const hexDelta: number = 200;
-const componentSquareSize = hexDelta * 0.4;
+const HEX_DELTA: number = 400;
+const componentSquareSize = HEX_DELTA * 0.4;
 const debugDotSize = 10;
 const angleOffset = -45;
-const hexRadius = (hexDelta / 2);
+const hexRadius = (HEX_DELTA / 2);
 const APOTHEM = hexRadius * Math.sqrt(3) / 2
 function toRadians (angle: number) {
   return angle * (Math.PI / 180);
@@ -102,8 +101,8 @@ function createCircle(view: View2D) {
   view.add(
     <Circle
       ref={hex}
-      width={startingHexSize}
-      height={startingHexSize}
+      width={HEX_DELTA}
+      height={HEX_DELTA}
       lineWidth={1}
       stroke={'red'}
     />,
@@ -121,48 +120,25 @@ export default makeScene2D(function* (view) {
   view.fill("#242424");
 
 
-  const coreHex = createHex(view, startingHexSize);
-  let currSize = startingHexSize;
+  const coreHex = createHex(view, HEX_DELTA);
+  let currSize = HEX_DELTA;
   let hexArray: number[] = [1,2,3,4];
-  // let squareComponent = createComponentSquare(view, -60);
   let angleRange = Array.from(Array(6).keys()).map(x => x * 60);
-
-  // let origin = createDot(view, 0, 0);
-  // let originCircle = createCircle(view);
-  // let debugDot = createDebugDot(view, 0, hexRadius);
-  // debugDot = createDebugDot(view, 30, hexRadius);
-  // debugDot = createDebugDot(view, 60, hexRadius);
-  // debugDot = createDebugDot(view, 90, hexRadius);
-  // debugDot = createDebugDot(view, 0, APOTHEM);
-  // debugDot = createDebugDot(view, 0, APOTHEM * 1.5);
   const logger = useLogger();
-  
-  // let APOTHEM = 3 ^ (0.5) / 2 * 
-  // debugDot = createDebugDot(view, 0, 100);
-  // debugDot = createDebugDot(view, 0, 150);
-  // debugDot = createDebugDot(view, 0, 2);
+
   let squareComponent = createComponentSquare(view, -60, 1);
   squareComponent = createComponentSquare(view, 60, 1);
   squareComponent = createComponentSquare(view, 60, 2);
-
-  // let debugDot2 = createDebugDot(view, 0);
-
-  // squareComponent().absoluteRotation(-angleOffset);
-  // yield* squareComponent().absoluteRotation(angleOffset, 1);
-  // yield* squareComponent().absoluteRotation(30 + angleOffset, 1);
-  // squareComponent().
-  // yield* squareComponent().absoluteRotation(45, 1);
 
   for (let i of hexArray) {
 
     let lineFidelityHex = createHex(view, currSize);
 
-    currSize = startingHexSize + hexDelta * i;
+    currSize = HEX_DELTA + HEX_DELTA * i;
     yield* all(
       lineFidelityHex().width(currSize, 1),
       lineFidelityHex().height(currSize, 1),
     );
   }
-
 
 });
