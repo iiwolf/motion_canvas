@@ -1,10 +1,13 @@
 import {makeScene2D} from '@motion-canvas/2d/lib/scenes';
-import {Circle, Polygon, View2D} from '@motion-canvas/2d/lib/components';
+import {Circle, Line, Polygon, View2D} from '@motion-canvas/2d/lib/components';
 import {createRef} from '@motion-canvas/core/lib/utils';
 import {all} from '@motion-canvas/core/lib/flow';
 import { cos, sin } from '@motion-canvas/core/lib/tweening';
 import {useLogger} from '@motion-canvas/core/lib/utils';
 import { Logger } from '@motion-canvas/core';
+import { LineSegment } from '@motion-canvas/2d/lib/curves';
+import { Vector2 } from '@motion-canvas/core/lib/types';
+import { quickHull } from "@derschmale/tympanum";
 
 // function createPolygons(view: View2D, nHexes: number){
 
@@ -23,6 +26,8 @@ const debugDotSize = 10;
 const angleOffset = -45;
 const hexRadius = (HEX_DELTA / 2);
 const APOTHEM = hexRadius * Math.sqrt(3) / 2
+const ORIGIN = new Vector2(0,0);
+
 function toRadians (angle: number) {
   return angle * (Math.PI / 180);
 }
@@ -45,7 +50,13 @@ function createHex(view: View2D, size: number) {
 }
 
 function createComponentSquare(view: View2D, angle: number, level: number) {
+  // let hex = new Polygon(
+  //   x=Math.cos(toRadians(angle)) * getCenterDistance(level)
+  //   y=Math.sin(toRadians(angle)) * getCenterDistance(level)
+  // )
+
   const hex = createRef<Polygon>();
+
   view.add(
     <Polygon
       ref={hex}
@@ -115,30 +126,106 @@ function getCenterDistance(level: number) {
   return APOTHEM * (level + 0.5);
 }
 
+// function createLineBetweenSquares(sq1, sq2) {
+
+// }
+
+
+function createLineToCore(view: View2D, sq1: Polygon) {
+  // let start = sq1.position;
+  // const line = createRef<Line>();
+  let start: Vector2 = sq1.position();
+  let line = new LineSegment(start, ORIGIN)
+  view.add(line);
+  //   <LineSegmen
+  //   ref={line}
+  //   start={new Vector2(0,0)}
+  //   end={origin.position}
+  // />
+  // )
+}
+
+// export default makeScene2D(function* (view) {
+
+//   view.fill("#242424");
+
+//   const coreHex = createHex(view, HEX_DELTA);
+//   let currSize = HEX_DELTA;
+//   let hexArray: number[] = [1,2,3,4];
+//   const logger = useLogger();
+//   const hexAngles = Array.from(Array(6).keys()).map(x => x * 60);
+
+//   for (let i of hexArray) {
+
+//     let lineFidelityHex = createHex(view, currSize);
+
+//     currSize = HEX_DELTA + HEX_DELTA * i;
+//     yield* all(
+//       lineFidelityHex().width(currSize, 1),
+//       lineFidelityHex().height(currSize, 1),
+//     );
+
+//     let randomAngle = hexAngles[Math.floor(Math.random() * hexAngles.length)];
+//     let randomLevel = hexArray[Math.floor(Math.random() * i)];
+//     let squareComponent = createComponentSquare(view, randomAngle, randomLevel);
+//     createLineToCore(view, squareComponent);
+//   }
+
+// });
+
+function addRandomDot(view: View2D, center: number, size: number, color: string) {
+  const hex = createRef<Circle>();
+  let x = Math.random() * size - 1/2 * size + center;
+  let y = Math.random() * size - 1/2 * size + center;
+  view.add(
+    <Circle
+      ref={hex}
+      x={x}
+      y={y}
+      fill={color}
+      width={20}
+      height={20}
+    />,
+  );
+    
+  return [x, y];
+}
+
+function addDot(view: View2D, x: number, y: number, color: string) {
+  const hex = createRef<Circle>();
+  view.add(
+    <Circle
+      ref={hex}
+      x={x}
+      y={y}
+      fill={color}
+      width={20}
+      height={20}
+    />,
+  );
+    
+  return [x, y];
+}
 export default makeScene2D(function* (view) {
 
   view.fill("#242424");
+  let logger = useLogger();
+  // logger.debug(view.width());
+  // logger.debug(view.height());
+  let nDots = 100;
+  const points = [];
+  for (let i of Array(nDots)) {
+    points[i] = addRandomDot(view, 0, 500, 'red');
+  }
+  const hull = quickHull(points);
 
+  // Plot hull
+  for (let vert of hull.values()) {
+    addDot(view, vert.verts.values(), vert.verts[1], 'green');
 
-  const coreHex = createHex(view, HEX_DELTA);
-  let currSize = HEX_DELTA;
-  let hexArray: number[] = [1,2,3,4];
-  let angleRange = Array.from(Array(6).keys()).map(x => x * 60);
-  const logger = useLogger();
-
-  let squareComponent = createComponentSquare(view, -60, 1);
-  squareComponent = createComponentSquare(view, 60, 1);
-  squareComponent = createComponentSquare(view, 60, 2);
-
-  for (let i of hexArray) {
-
-    let lineFidelityHex = createHex(view, currSize);
-
-    currSize = HEX_DELTA + HEX_DELTA * i;
-    yield* all(
-      lineFidelityHex().width(currSize, 1),
-      lineFidelityHex().height(currSize, 1),
-    );
   }
 
+  for (let i of Array(nDots)) {
+    let dot = addRandomDot(view, 100, 500, 'blue');
+  }
 });
