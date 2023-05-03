@@ -7,7 +7,7 @@ import {useLogger} from '@motion-canvas/core/lib/utils';
 import { Logger } from '@motion-canvas/core';
 import { LineSegment } from '@motion-canvas/2d/lib/curves';
 import { Vector2 } from '@motion-canvas/core/lib/types';
-import { quickHull } from "@derschmale/tympanum";
+import { Facet, quickHull } from "@derschmale/tympanum";
 
 // function createPolygons(view: View2D, nHexes: number){
 
@@ -210,22 +210,50 @@ export default makeScene2D(function* (view) {
 
   view.fill("#242424");
   let logger = useLogger();
-  // logger.debug(view.width());
-  // logger.debug(view.height());
-  let nDots = 100;
+
   const points = [];
-  for (let i of Array(nDots)) {
-    points[i] = addRandomDot(view, 0, 500, 'red');
+  let nDots = 500;
+  let center = 0;
+  let size = 500;
+  for (let i = 0; i < nDots; ++i) {  
+      let x: number = Math.random() * size - 1/2 * size + center;
+      let y: number = Math.random() * size - 1/2 * size + center;
+      points[i] = [x, y];
+      addDot(view, x, y, 'red');
   }
+
+  // const hull = quickHull(points);
+  // logger.debug(hull.toString());
+  // let facet: Facet = hull.values().next().value;
+  // let testVert = facet.verts.values().next().value;
+  // logger.debug(testVert.toString());
+
+
+  // const points = [];
+  // for (let i of Array(nDots)) {
+  //   let x: number = Math.random() * size - 1/2 * size + center;
+  //   let y: number = Math.random() * size - 1/2 * size + center;
+  //   points[i] = [x, y]
+  //   addDot(view, x, y, 'red');
+  // }
+
   const hull = quickHull(points);
+  // logger.debug(hull.toString());
+  // let facet: Facet = hull.values().next().value;
+  // let testVert = facet.verts.values().next().value;
+  // logger.debug(testVert.toString());
 
+  
   // Plot hull
-  for (let vert of hull.values()) {
-    addDot(view, vert.verts.values(), vert.verts[1], 'green');
-
+  for (let facet of hull.values()) {
+    let indices = facet.verts.values();
+    for (let i of indices){
+      let [x, y] = points[i];
+      addDot(view, x, y, 'green');
+    }
   }
 
-  for (let i of Array(nDots)) {
-    let dot = addRandomDot(view, 100, 500, 'blue');
-  }
+  // for (let i of Array(nDots)) {
+  //   let dot = addRandomDot(view, 100, 500, 'blue');
+  // }
 });
