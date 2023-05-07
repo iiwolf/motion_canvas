@@ -1,5 +1,5 @@
 import {makeScene2D} from '@motion-canvas/2d/lib/scenes';
-import {Circle, Line, Node, Polygon, View2D} from '@motion-canvas/2d/lib/components';
+import {Circle, Line, Node, Polygon, Rect, Txt, View2D} from '@motion-canvas/2d/lib/components';
 import {createRef, Reference} from '@motion-canvas/core/lib/utils';
 import {all} from '@motion-canvas/core/lib/flow';
 import { cos, sin } from '@motion-canvas/core/lib/tweening';
@@ -21,7 +21,7 @@ import { Facet, quickHull } from "@derschmale/tympanum";
 // }
 
 const HEX_DELTA: number = 400;
-const componentSquareSize = HEX_DELTA * 0.4;
+const componentSquareSize = HEX_DELTA * 0.3;
 const debugDotSize = 10;
 const angleOffset = -45;
 const hexRadius = (HEX_DELTA / 2);
@@ -43,7 +43,7 @@ export default makeScene2D(function* (view) {
   coreHex().fill(FILL_COLOR)
 
   yield *all(
-    coreHex().absoluteRotation(180, 1),
+    coreHex().absoluteRotation(330, 1),
     coreHex().width(HEX_DELTA, 1),
     coreHex().height(HEX_DELTA, 1),
     // coreHex().shadowBlur(60, 1),
@@ -52,7 +52,12 @@ export default makeScene2D(function* (view) {
   let currSize = HEX_DELTA;
   let hexArray: number[] = [1,2,3,4];
   const logger = useLogger();
-  const hexAngles = Array.from(Array(6).keys()).map(x => x * 60);
+  const fidelityText: string[] = [
+    "Line Fidelity",
+    "Low Fidelity",
+    "Medium Fidelity",
+    "High Fidelity",
+  ];
 
   for (let i of hexArray) {
 
@@ -63,35 +68,47 @@ export default makeScene2D(function* (view) {
       lineFidelityHex().width(currSize, 1),
       lineFidelityHex().height(currSize, 1),
     );
-
-    // let randomAngle = hexAngles[Math.floor(Math.random() * hexAngles.length)];
-    // let randomLevel = hexArray[Math.floor(Math.random() * i)];
-    // let squareComponent = createComponentSquare(view, randomAngle, randomLevel);
-
-    // squareComponent = createComponentSquare(view, randomAngle, randomLevel);
-    // squareComponent = createComponentSquare(view, randomAngle, randomLevel);
-
     
 
-
-
+    // Add text
+    const text = createRef<Txt>();
+    view.add(
+      <>
+        <Rect layout 
+          fill={FILL_COLOR}
+          y={currSize/2  * Math.sqrt(3) / 2}
+          padding={[10, 10, 10, 10]}
+        >
+          <Txt
+            ref={text}
+            text={fidelityText[i-1]}
+            y={currSize/2  * Math.sqrt(3) / 2}
+            fontSize={40}
+            // lineHeight={50}
+            fontFamily={'JetBrains Mono'}
+            fill={'rgba(255, 255, 255, 0.6)'}
+            textAlign={'center'}
+            alignContent={'center'}
+          />
+        </Rect>
+      </>
+    )
 
   }
 
-  const myArray: number[][] = [
-    [0, 1],
-    [240, 1],
-    [300, 1],
-    [180, 2],
-    [60, 3],
-    [240, 3],
-    [60, 3],
-    [120, 4],
+  const componentLocations: number[][] = [
+    [30, 1],
+    [270, 1],
+    [330, 1],
+    [210, 2],
+    [30, 3],
+    [270, 3],
+    [150, 4],
   ];
 
-  const squareComponents: Reference<Polygon>[] = [];
-  for (let i = 0; i < myArray.length; i++) {
-    squareComponents[i] = createComponentSquare(view, myArray[i][0], myArray[i][1]);
+  const squareComponents: Reference<Rect>[] = [];
+  for (let i = 0; i < componentLocations.length; i++) {
+    squareComponents[i] = createComponentSquare(view, componentLocations[i][0], componentLocations[i][1]);
     let line = createLineToCore(view, squareComponents[i]());
   }
 
@@ -104,7 +121,7 @@ export default makeScene2D(function* (view) {
 });
 
 
-function createLineToCore(view: View2D, sq1: Polygon) {
+function createLineToCore(view: View2D, sq1: Rect) {
   // let start = sq1.position;
   let start: Vector2 = sq1.position();
   // let line = new LineSegment(start, ORIGIN)
@@ -140,6 +157,7 @@ function createHex(view: View2D, size: number) {
       shadowColor={"black"}
       sides={6}
       lineWidth={4}
+      rotation={30}
       stroke={LINE_COLOR}
     />,
   );
@@ -148,23 +166,23 @@ function createHex(view: View2D, size: number) {
 }
 
 function createComponentSquare(view: View2D, angle: number, level: number) {
-  const hex = createRef<Polygon>();
+  const hex = createRef<Rect>();
   view.add(
-    <Polygon
+    <Rect
       ref={hex}
       x={Math.cos(toRadians(angle)) * getCenterDistance(level)}
       y={Math.sin(toRadians(angle)) * getCenterDistance(level)}
       width={componentSquareSize}
       height={componentSquareSize}
-      shadowBlur={30}
-      shadowColor={"black"}
-      shadowOffsetX={5}
-      shadowOffsetY={5}
-      sides={4}
-      lineWidth={2}
+      // shadowBlur={30}
+      // shadowColor={"black"}
+      // shadowOffsetX={5}
+      // shadowOffsetY={5}
+      lineWidth={5}
       stroke={LINE_COLOR}
-      fill={ICE_BLUE}
-      rotation={angle - angleOffset}
+      fill={FILL_COLOR}
+      radius={20}
+      rotation={angle}
     />,
   );
   
