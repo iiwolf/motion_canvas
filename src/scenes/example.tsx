@@ -1,6 +1,6 @@
 import {makeScene2D} from '@motion-canvas/2d/lib/scenes';
-import {Circle, Line, Polygon, View2D} from '@motion-canvas/2d/lib/components';
-import {createRef} from '@motion-canvas/core/lib/utils';
+import {Circle, Line, Node, Polygon, View2D} from '@motion-canvas/2d/lib/components';
+import {createRef, Reference} from '@motion-canvas/core/lib/utils';
 import {all} from '@motion-canvas/core/lib/flow';
 import { cos, sin } from '@motion-canvas/core/lib/tweening';
 import {useLogger} from '@motion-canvas/core/lib/utils';
@@ -28,18 +28,25 @@ const hexRadius = (HEX_DELTA / 2);
 const APOTHEM = hexRadius * Math.sqrt(3) / 2
 const ORIGIN = new Vector2(0,0);
 
+const FILL_COLOR = "#1D1F1F";
+const LINE_COLOR = "#B3B8B3";
+const ICE_BLUE = "#5AC1CB";
+const ICE_BLUE_DARK = "#4C8B95";
 
 export default makeScene2D(function* (view) {
 
-  view.fill("#242424");
+  // Setup background
+  view.fill(FILL_COLOR);
+  createDotGrid(view);
 
   const coreHex = createHex(view, 1);
-  coreHex().fill("#D83311"),
+  coreHex().fill(FILL_COLOR)
+
   yield *all(
     coreHex().absoluteRotation(180, 1),
     coreHex().width(HEX_DELTA, 1),
     coreHex().height(HEX_DELTA, 1),
-    coreHex().shadowBlur(60, 1),
+    // coreHex().shadowBlur(60, 1),
   )
 
   let currSize = HEX_DELTA;
@@ -57,23 +64,45 @@ export default makeScene2D(function* (view) {
       lineFidelityHex().height(currSize, 1),
     );
 
-    let randomAngle = hexAngles[Math.floor(Math.random() * hexAngles.length)];
-    let randomLevel = hexArray[Math.floor(Math.random() * i)];
-    let squareComponent = createComponentSquare(view, randomAngle, randomLevel);
+    // let randomAngle = hexAngles[Math.floor(Math.random() * hexAngles.length)];
+    // let randomLevel = hexArray[Math.floor(Math.random() * i)];
+    // let squareComponent = createComponentSquare(view, randomAngle, randomLevel);
+
+    // squareComponent = createComponentSquare(view, randomAngle, randomLevel);
+    // squareComponent = createComponentSquare(view, randomAngle, randomLevel);
+
     
-    yield *all(
-      squareComponent().position.x(Math.cos(toRadians(randomAngle)) * getCenterDistance(randomLevel), 1),
-      squareComponent().position.y(Math.sin(toRadians(randomAngle)) * getCenterDistance(randomLevel), 1),
-    );
-    
-    yield createLineToCore(view, squareComponent());
-    
-    yield* coreHex().moveToTop();
-    yield* squareComponent().moveToTop();
+
+
+
 
   }
 
+  const myArray: number[][] = [
+    [0, 1],
+    [240, 1],
+    [300, 1],
+    [180, 2],
+    [60, 3],
+    [240, 3],
+    [60, 3],
+    [120, 4],
+  ];
+
+  const squareComponents: Reference<Polygon>[] = [];
+  for (let i = 0; i < myArray.length; i++) {
+    squareComponents[i] = createComponentSquare(view, myArray[i][0], myArray[i][1]);
+    let line = createLineToCore(view, squareComponents[i]());
+  }
+
+  // Move to top
+  for (let square of squareComponents) {
+    yield* square().moveToTop();
+  }
+  yield* coreHex().moveToTop();
+
 });
+
 
 function createLineToCore(view: View2D, sq1: Polygon) {
   // let start = sq1.position;
@@ -88,7 +117,7 @@ function createLineToCore(view: View2D, sq1: Polygon) {
       width={100}
       height={100}
       lineWidth={4}
-      stroke={'#fff'}
+      stroke={LINE_COLOR}
   />
   )
 
@@ -111,7 +140,7 @@ function createHex(view: View2D, size: number) {
       shadowColor={"black"}
       sides={6}
       lineWidth={4}
-      stroke={'#fff'}
+      stroke={LINE_COLOR}
     />,
   );
     
@@ -119,13 +148,12 @@ function createHex(view: View2D, size: number) {
 }
 
 function createComponentSquare(view: View2D, angle: number, level: number) {
-
   const hex = createRef<Polygon>();
-
   view.add(
     <Polygon
       ref={hex}
-
+      x={Math.cos(toRadians(angle)) * getCenterDistance(level)}
+      y={Math.sin(toRadians(angle)) * getCenterDistance(level)}
       width={componentSquareSize}
       height={componentSquareSize}
       shadowBlur={30}
@@ -134,8 +162,8 @@ function createComponentSquare(view: View2D, angle: number, level: number) {
       shadowOffsetY={5}
       sides={4}
       lineWidth={2}
-      stroke={'#fff'}
-      fill={"#1ba4da"}
+      stroke={LINE_COLOR}
+      fill={ICE_BLUE}
       rotation={angle - angleOffset}
     />,
   );
@@ -159,17 +187,68 @@ function createDebugDot(view: View2D, angle: number, h: number) {
   return hex;
 }
 
-function createDot(view: View2D, x: number, y:number) {
+function linspace(startValue: number, stopValue: number, cardinality: number) {
+  var arr = [];
+  var step = (stopValue - startValue) / (cardinality - 1);
+  for (var i = 0; i < cardinality; i++) {
+    arr.push(startValue + (step * i));
+  }
+  return arr;
+}
+
+function createDotGrid(view: View2D) {
+  let width = view.width();
+  let height = view.height();
+  const nDots = 20;
+  const spacing = width / nDots;
+  const offset = spacing / 2;
+  const xLocs = linspace(-width / 2 + offset, width / 2 - offset, nDots);
+  const yLocs = linspace(-height / 2 + offset, height / 2 - offset, nDots);
+  for (let x of xLocs) {
+    for (let y of yLocs) {
+      createDot(view, x, y, LINE_COLOR, 5);
+
+      // // Add pluses
+      // let plusSpacing = spacing * 0.05;
+      // let plusLength = spacing * 0.1;
+      // createLine(view, new Vector2(x + plusSpacing, y), new Vector2(x + plusLength, y));
+      // createLine(view, new Vector2(x - plusSpacing, y), new Vector2(x - plusLength, y));
+      // createLine(view, new Vector2(x, y + plusSpacing), new Vector2(x, y + plusLength));
+      // createLine(view, new Vector2(x, y - plusSpacing), new Vector2(x, y - plusLength));
+
+    }
+  }
+}
+
+function createLine(view: View2D, start: Vector2, end: Vector2) {
+  // let start = sq1.position;
+  // let line = new LineSegment(start, ORIGIN)
+  // view.add(line);
+  const line = createRef<Line>();
+  view.add(
+    <Line
+      ref={line}
+      points={[start, end]}
+      opacity={0.25}
+      lineWidth={2}
+      stroke={LINE_COLOR}
+  />
+  )
+
+  return line;
+}
+
+function createDot(view: View2D, x: number, y:number, color: string, size: number) {
   const hex = createRef<Circle>();
   view.add(
     <Circle
       ref={hex}
       x={x}
       y={y}
-      fill={'red'}
-      lineWidth={4}
-      width={debugDotSize}
-      height={debugDotSize}
+      opacity={0.25}
+      fill={color}
+      width={size}
+      height={size}
     />,
   );
     
