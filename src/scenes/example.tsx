@@ -118,6 +118,46 @@ export default makeScene2D(function* (view) {
   }
   yield* coreHex().moveToTop();
 
+  // Add discipline text to outer edge of each sextant
+  const disciplineText: string[] = [
+    "Thermal",
+    "Aerodynamics",
+    "Structural",
+    "Dynamics",
+    "Electromagnetic"
+  ];
+  const textAngles: number[] = [
+
+  ]
+  let distanceToEdge = HEX_DELTA * 3 * Math.sqrt(3) / 2 * 0.9;
+
+  for (let i = 0; i < disciplineText.length; i++) {
+    // Add text
+    const text = createRef<Txt>();
+    view.add(
+      <>
+        <Rect layout 
+          fill={FILL_COLOR}
+          x={Math.cos(toRadians(i * 60 + 150)) * distanceToEdge}
+          y={Math.sin(toRadians(i * 60 + 150)) * distanceToEdge}
+          rotation={i * 60 + 30 * 2 + ([1,2,3].includes(i) ? 180 : 0) }
+          padding={[10, 10, 10, 10]}
+        >
+          <Txt
+            ref={text}
+            text={disciplineText[i]}
+            y={currSize/2  * Math.sqrt(3) / 2}
+            fontSize={50}
+            // lineHeight={50}
+            fontFamily={'JetBrains Mono'}
+            fill={'rgba(255, 255, 255, 0.6)'}
+            textAlign={'center'}
+            alignContent={'center'}
+          />
+        </Rect>
+      </>
+    )
+  }
 });
 
 
@@ -130,15 +170,13 @@ function createLineToCore(view: View2D, sq1: Rect) {
   view.add(
     <Line
       ref={line}
-      points={[start]}
-      width={100}
-      height={100}
-      lineWidth={4}
-      stroke={LINE_COLOR}
+      points={[start, ORIGIN]}
+      lineWidth={2}
+      stroke={ICE_BLUE}
   />
   )
 
-  return line().points([start, ORIGIN]);
+  return line();
 }
 
 function toRadians (angle: number) {
@@ -154,7 +192,6 @@ function createHex(view: View2D, size: number) {
       width={size}
       height={size}
       // shadowBlur={0}
-      shadowColor={"black"}
       sides={6}
       lineWidth={4}
       rotation={30}
@@ -179,7 +216,7 @@ function createComponentSquare(view: View2D, angle: number, level: number) {
       // shadowOffsetX={5}
       // shadowOffsetY={5}
       lineWidth={5}
-      stroke={LINE_COLOR}
+      stroke={ICE_BLUE_DARK}
       fill={FILL_COLOR}
       radius={20}
       rotation={angle}
